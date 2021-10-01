@@ -1,8 +1,10 @@
 name: Release Terraform Provider Binaries
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Tag to release
+        required: true
 
 #  release:
 #    types: [created]
@@ -20,13 +22,6 @@ jobs:
         goarch: [amd64]
 
     steps:
-      - name: Set env
-        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: Test
-        run: |
-          echo $RELEASE_VERSION
-          echo Relase version: ${{ env.RELEASE_VERSION }}
-
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go-version }} # The Go version to download (if necessary) and use.
@@ -40,7 +35,7 @@ jobs:
       - run: pwd && ls -la
 
       - name: Build binaries
-        run: ./build-release.sh ${{ env.RELEASE_VERSION }}
+        run: ./build-release.sh ${{ github.event.inputs.version }}
 
       - run: ls -la
 
@@ -51,7 +46,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: terraform-provider-keeper_*
-          tag: ${{ env.RELEASE_VERSION }}
+          tag: ${{ github.event.inputs.version }}
           overwrite: true
           file_glob: true
-          body: "Keeper Secrets Manager Terraform provider ${{ env.RELEASE_VERSION }}"
+          body: "Keeper Secrets Manager Terraform provider ${{ github.event.inputs.version }}"
